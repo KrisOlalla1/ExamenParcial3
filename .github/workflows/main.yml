@@ -1,0 +1,46 @@
+name: CI de Frontend y Backend
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build-and-test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout del repositorio
+      uses: actions/checkout@v4
+
+    - name: Configurar Node.js en frontend
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Instalar dependencias del frontend
+      run: npm install
+      working-directory: ./frontend
+
+    - name: Ejecutar tests del frontend
+      run: npm test
+      working-directory: ./frontend
+
+  build-and-test-backend:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout del repositorio
+      uses: actions/checkout@v4
+
+    - name: Configurar Node.js en backend
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Instalar dependencias del backend
+      run: npm install
+      working-directory: ./backend
+
+    - name: Ejecutar tests del backend
+      run: npm test
+      working-directory: ./backend

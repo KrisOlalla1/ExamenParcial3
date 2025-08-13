@@ -1,0 +1,6 @@
+pytest
+selenium
+webdriver-manager
+Flask
+flask-cors
+requests

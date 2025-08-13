@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gestión Médica</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h1>Gestión Médica</h1>
+
+  <!-- Pacientes -->
+  <section>
+    <h2>Pacientes</h2>
+    <form id="form-paciente">
+      <input type="text" id="paciente-nombre" placeholder="Nombre" required />
+      <input type="text" id="paciente-apellido" placeholder="Apellido" required />
+      <input type="date" id="paciente-fecha" required />
+      <input type="email" id="paciente-email" placeholder="Email" required />
+      <button type="submit">Agregar Paciente</button>
+    </form>
+    <ul id="lista-pacientes"></ul>
+  </section>
+
+  <!-- Médicos -->
+  <section>
+    <h2>Médicos</h2>
+    <form id="form-medico">
+      <input type="text" id="medico-nombre" placeholder="Nombre" required />
+      <input type="text" id="medico-especialidad" placeholder="Especialidad" required />
+      <button type="submit">Agregar Médico</button>
+    </form>
+    <ul id="lista-medicos"></ul>
+  </section>
+
+  <!-- Citas -->
+  <section>
+    <h2>Citas</h2>
+    <form id="form-cita">
+      <select id="cita-paciente" required></select>
+      <select id="cita-medico" required></select>
+      <input type="datetime-local" id="cita-fecha" required />
+      <button type="submit">Agendar Cita</button>
+    </form>
+
+    <ul id="lista-citas"></ul>
+
+    <!-- Paginación -->
+    <div>
+      <button id="prev-page">Anterior</button>
+      <span id="pagina-info"></span>
+      <button id="next-page">Siguiente</button>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>

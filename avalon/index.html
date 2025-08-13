@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestión Médica con Avalon 2.2.10</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 900px;
+      margin: 2rem auto;
+      background: #f5f7fa;
+      color: #333;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 1rem;
+    }
+
+    section {
+      background: white;
+      padding: 1.5rem 2rem;
+      margin-bottom: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      justify-content: center;
+    }
+
+    form input[type="text"],
+    form input[type="email"],
+    form input[type="date"],
+    form input[type="datetime-local"],
+    form input[type="time"],
+    form select {
+      flex: 1 1 180px;
+      padding: 0.5rem 0.75rem;
+      font-size: 1rem;
+      border: 1.8px solid #ddd;
+      border-radius: 6px;
+      transition: border-color 0.3s ease;
+    }
+
+    form input[type="text"]:focus,
+    form input[type="email"]:focus,
+    form input[type="date"]:focus,
+    form input[type="datetime-local"]:focus,
+    form input[type="time"]:focus,
+    form select:focus {
+      border-color: #3498db;
+      outline: none;
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 0.55rem 1.2rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.25s ease;
+      user-select: none;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: #2980b9;
+    }
+
+    button:disabled {
+      background-color: #a3c4f3;
+      cursor: not-allowed;
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    li {
+      background: #ecf0f1;
+      margin-bottom: 0.8rem;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      font-size: 1rem;
+    }
+
+    li > div.edit-form {
+      width: 100%;
+      margin-top: 0.5rem;
+      background: #dbe9f4;
+      padding: 0.8rem 1rem;
+      border-radius: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+      justify-content: center;
+    }
+
+    .edit-form input[type="text"],
+    .edit-form input[type="email"],
+    .edit-form input[type="date"],
+    .edit-form select,
+    .edit-form input[type="time"] {
+      flex: 1 1 150px;
+      padding: 0.4rem 0.6rem;
+      font-size: 0.95rem;
+      border-radius: 5px;
+      border: 1.6px solid #ccc;
+    }
+
+    .edit-form button {
+      flex: 0 0 auto;
+      padding: 0.45rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    section > div[style] {
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 600px) {
+      form input[type="text"],
+      form input[type="email"],
+      form input[type="date"],
+      form input[type="datetime-local"],
+      form input[type="time"],
+      form select {
+        flex: 1 1 100%;
+      }
+
+      li {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      li > div.edit-form {
+        justify-content: flex-start;
+      }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/avalon2@2.2.10/dist/avalon.min.js"></script>
+</head>
+<body>
+  <div ms-controller="app">
+    <h1>Gestión Médica</h1>
+
+    <!-- PACIENTES -->
+    <section>
+      <h2>Pacientes</h2>
+      <form ms-submit="agregarPaciente">
+        <input type="text" ms-duplex="nuevoPaciente.nombre" placeholder="Nombre" required />
+        <input type="text" ms-duplex="nuevoPaciente.apellido" placeholder="Apellido" required />
+        <input type="date" ms-duplex="nuevoPaciente.fecha_nacimiento" required />
+        <input type="email" ms-duplex="nuevoPaciente.email" placeholder="Email" required />
+        <button type="submit">Agregar Paciente</button>
+      </form>
+      <ul>
+        <li ms-for="p in pacientes">
+          {{p.nombre}} {{p.apellido}} - Nac: {{p.fecha_nacimiento}} - Email: {{p.email}}
+          <button type="button" ms-click="editarPaciente(p)">Editar</button>
+          <button type="button" ms-click="eliminarPaciente(p.id)">Eliminar</button>
+          <div class="edit-form" ms-visible="p.editando">
+            <input type="text" ms-duplex="p.nombre" placeholder="Nombre" />
+            <input type="text" ms-duplex="p.apellido" placeholder="Apellido" />
+            <input type="date" ms-duplex="p.fecha_nacimiento" />
+            <input type="email" ms-duplex="p.email" placeholder="Email" />
+            <button type="button" ms-click="guardarPaciente(p)">Guardar</button>
+            <button type="button" ms-click="cancelarEditarPaciente(p)">Cancelar</button>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- MÉDICOS -->
+    <section>
+      <h2>Médicos</h2>
+      <form ms-submit="agregarMedico">
+        <input type="text" ms-duplex="nuevoMedico.nombre" placeholder="Nombre" required />
+        <input type="text" ms-duplex="nuevoMedico.apellido" placeholder="Apellido" required />
+        <input type="text" ms-duplex="nuevoMedico.especialidad" placeholder="Especialidad" required />
+        <button type="submit">Agregar Médico</button>
+      </form>
+      <ul>
+        <li ms-for="m in medicos">
+          {{m.nombre}} {{m.apellido}} - {{m.especialidad}}
+          <button type="button" ms-click="editarMedico(m)">Editar</button>
+          <button type="button" ms-click="eliminarMedico(m.id)">Eliminar</button>
+          <div class="edit-form" ms-visible="m.editando">
+            <input type="text" ms-duplex="m.nombre" placeholder="Nombre" />
+            <input type="text" ms-duplex="m.apellido" placeholder="Apellido" />
+            <input type="text" ms-duplex="m.especialidad" placeholder="Especialidad" />
+            <button type="button" ms-click="guardarMedico(m)">Guardar</button>
+            <button type="button" ms-click="cancelarEditarMedico(m)">Cancelar</button>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- CITAS -->
+    <section>
+      <h2>Citas</h2>
+      <form ms-submit="agregarCita">
+        <select ms-duplex="nuevaCita.paciente_id" required>
+          <option value="">Seleccione paciente</option>
+          <option ms-for="p in pacientes" :value="p.id">{{p.nombre}} {{p.apellido}}</option>
+        </select>
+        <select ms-duplex="nuevaCita.medico_id" required>
+          <option value="">Seleccione médico</option>
+          <option ms-for="m in medicos" :value="m.id">{{m.nombre}} {{m.apellido}} - {{m.especialidad}}</option>
+        </select>
+        <input type="datetime-local" ms-duplex="nuevaCita.fecha_hora" required />
+        <input type="text" ms-duplex="nuevaCita.consultorio" placeholder="Consultorio (opcional)" />
+        <button type="submit">Agendar Cita</button>
+      </form>
+
+      <ul>
+        <li ms-for="c in citas">
+          {{ getPacienteNombre(c.paciente_id) }} con {{ getMedicoNombre(c.medico_id) }} - {{ c.fecha }} {{ c.hora }} - Consultorio: {{ c.consultorio || '-' }}
+          <button type="button" ms-click="editarCita(c)">Editar</button>
+          <button type="button" ms-click="eliminarCita(c.id)">Eliminar</button>
+          <div class="edit-form" ms-visible="c.editando">
+            <select ms-duplex="c.paciente_id" required>
+              <option ms-for="p in pacientes" :value="p.id">{{p.nombre}} {{p.apellido}}</option>
+            </select>
+            <select ms-duplex="c.medico_id" required>
+              <option ms-for="m in medicos" :value="m.id">{{m.nombre}} {{m.apellido}} - {{m.especialidad}}</option>
+            </select>
+            <input type="date" ms-duplex="c.fecha" required />
+            <input type="time" ms-duplex="c.hora" required />
+            <input type="text" ms-duplex="c.consultorio" placeholder="Consultorio" />
+            <button type="button" ms-click="guardarCita(c)">Guardar</button>
+            <button type="button" ms-click="cancelarEditarCita(c)">Cancelar</button>
+          </div>
+        </li>
+      </ul>
+
+      <div style="text-align:center; margin-top:1em;">
+        <button type="button" ms-click="paginaAnterior" ms-disabled="paginaActual <= 1">Anterior</button>
+        <span>Página {{paginaActual}} de {{totalPaginas}}</span>
+        <button type="button" ms-click="paginaSiguiente" ms-disabled="paginaActual >= totalPaginas">Siguiente</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    var vm = avalon.define({
+      $id: "app",
+      pacientes: [],
+      medicos: [],
+      citas: [],
+      paginaActual: 1,
+      totalPaginas: 1,
+
+      nuevoPaciente: {
+        nombre: "",
+        apellido: "",
+        fecha_nacimiento: "",
+        email: ""
+      },
+
+      nuevoMedico: {
+        nombre: "",
+        apellido: "",
+        especialidad: ""
+      },
+
+      nuevaCita: {
+        paciente_id: "",
+        medico_id: "",
+        fecha_hora: "",
+        consultorio: ""
+      },
+
+      getPacienteNombre: function(id) {
+        var p = vm.pacientes.find(function(x) { return x.id === id; });
+        return p ? p.nombre + " " + p.apellido : "Paciente no encontrado";
+      },
+
+      getMedicoNombre: function(id) {
+        var m = vm.medicos.find(function(x) { return x.id === id; });
+        return m ? m.nombre + " " + m.apellido + " (" + m.especialidad + ")" : "Médico no encontrado";
+      },
+
+      fetchPacientes: function() {
+        fetch("http://localhost:5000/api/pacientes")
+          .then(res => res.json())
+          .then(data => {
+            vm.pacientes = data.map(p => {
+              p.editando = false;
+              return p;
+            });
+          })
+          .catch(() => alert("Error al cargar pacientes"));
+      },
+
+      fetchMedicos: function() {
+        fetch("http://localhost:5000/api/medicos")
+          .then(res => res.json())
+          .then(data => {
+            vm.medicos = data.map(m => {
+              m.editando = false;
+              return m;
+            });
+          })
+          .catch(() => alert("Error al cargar médicos"));
+      },
+
+      fetchCitas: function(page) {
+        page = page || 1;
+        fetch(`http://localhost:5000/api/citas?page=${page}`)
+          .then(res => res.json())
+          .then(data => {
+            vm.citas = data.citas.map(c => {
+              c.fecha = c.fecha.split("T")[0];
+              c.hora = c.hora ? c.hora.substring(0,5) : "";
+              c.editando = false;
+              return c;
+            });
+            vm.paginaActual = data.current_page;
+            vm.totalPaginas = data.pages;
+          })
+          .catch(() => alert("Error al cargar citas"));
+      },
+
+      agregarPaciente: function(e) {
+        e.preventDefault();
+        fetch("http://localhost:5000/api/pacientes", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(vm.nuevoPaciente)
+        })
+        .then(res => {
+          if(res.ok) {
+            vm.nuevoPaciente = { nombre:"", apellido:"", fecha_nacimiento:"", email:"" };
+            vm.fetchPacientes();
+          } else {
+            alert("Error al agregar paciente");
+          }
+        })
+        .catch(() => alert("Error al conectar con el servidor"));
+      },
+
+      editarPaciente: function(p) {
+        p.editando = true;
+      },
+
+      cancelarEditarPaciente: function(p) {
+        p.editando = false;
+      },
+
+      guardarPaciente: function(p) {
+        fetch(`http://localhost:5000/api/pacientes/${p.id}`, {
+          method: "PUT",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            nombre: p.nombre,
+            apellido: p.apellido,
+            fecha_nacimiento: p.fecha_nacimiento,
+            email: p.email
+          })
+        })
+        .then(res => {
+          if(res.ok) {
+            p.editando = false;
+            vm.fetchPacientes();
+          } else {
+            alert("Error al actualizar paciente");
+          }
+        })
+        .catch(() => alert("Error al conectar con el servidor"));
+      },
+
+      eliminarPaciente: function(id) {
+        if(confirm("¿Seguro que quieres eliminar este paciente?")) {
+          fetch(`http://localhost:5000/api/pacientes/${id}`, { method: "DELETE" })
+          .then(res => {
+            if(res.ok) vm.fetchPacientes();
+            else alert("Error al eliminar paciente");
+          })
+          .catch(() => alert("Error al conectar con el servidor"));
+        }
+      },
+
+      agregarMedico: function(e) {
+        e.preventDefault();
+        fetch("http://localhost:5000/api/medicos", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(vm.nuevoMedico)
+        })
+        .then(res => {
+          if(res.ok) {
+            vm.nuevoMedico = { nombre:"", apellido:"", especialidad:"" };
+            vm.fetchMedicos();
+          } else {
+            alert("Error al agregar médico");
+          }
+        })
+        .catch(() => alert("Error al conectar con el servidor"));
+      },
+
+      editarMedico: function(m) {
+        m.editando = true;
+      },
+
+      cancelarEditarMedico: function(m) {
+        m.editando = false;
+      },
+
+      guardarMedico: function(m) {
+        fetch(`http://localhost:5000/api/medicos/${m.id}`, {
+          method: "PUT",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            nombre: m.nombre,
+            apellido: m.apellido,
+            especialidad: m.especialidad
+          })
+        })
+        .then(res => {
+          if(res.ok) {
+            m.editando = false;
+            vm.fetchMedicos();
+          } else {
+            alert("Error al actualizar médico");
+          }
+        })
+        .catch(() => alert("Error al conectar con el servidor"));
+      },
+
+      eliminarMedico: function(id) {
+        if(confirm("¿Seguro que quieres eliminar este médico?")) {
+          fetch(`http://localhost:5000/api/medicos/${id}`, { method: "DELETE" })
+          .then(res => {
+            if(res.ok) vm.fetchMedicos();
+            else alert("Error al eliminar médico");
+          })
+          .catch(() => alert("Error al conectar con el servidor"));
+        }
+      },
+
+      agregarCita: function(e) {
+        e.preventDefault();
+        if(!vm.nuevaCita.paciente_id || !vm.nuevaCita.medico_id || !vm.nuevaCita.fecha_hora){
+          alert("Complete todos los campos obligatorios");
+          return;
+        }
+        var parts = vm.nuevaCita.fecha_hora.split("T");
+        var fecha = parts[0];
+        var hora = parts[1] ? parts[1].substring(0,5) : "";
+        fetch("http://localhost:5000/api/citas", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            paciente_id: parseInt(vm.nuevaCita.paciente_id),
+            medico_id: parseInt(vm.nuevaCita.medico_id),
+            fecha: fecha,
+            hora: hora,
+            consultorio: vm.nuevaCita.consultorio || ""
+          })
+        })
+        .then(res => {
+          if(res.ok){
+            vm.nuevaCita = { paciente_id:"", medico_id:"", fecha_hora:"", consultorio:"" };
+            vm.fetchCitas(vm.paginaActual);
+          } else {
+            alert("Error al agregar cita");
+          }
+        })
+        .catch(() => alert("Error al conectar con el servidor"));
+      },
+
+      editarCita: function(c) {
+        c.editando = true;
+      },
+
+      cancelarEditarCita: function(c) {
+        c.editando = false;
+      },
+
+      guardarCita: function(c) {
+        fetch(`http://localhost:5000/api/citas/${c.id}`, {
+          method: "PUT",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            paciente_id: parseInt(c.paciente_id),
+            medico_id: parseInt(c.medico_id),
+            fecha: c.fecha,
+            hora: c.hora,
+            consultorio: c.consultorio
+          })
+        })
+        .then(res => {
+          if(res.ok) {
+            c.editando = false;
+            vm.fetchCitas(vm.paginaActual);
+          } else {
+            alert("Error al actualizar cita");
+          }
+        })
+        .catch(() => alert("Error al conectar con el servidor"));
+      },
+
+      eliminarCita: function(id) {
+        if(confirm("¿Seguro que quieres eliminar esta cita?")) {
+          fetch(`http://localhost:5000/api/citas/${id}`, { method: "DELETE" })
+          .then(res => {
+            if(res.ok) vm.fetchCitas(vm.paginaActual);
+            else alert("Error al eliminar cita");
+          })
+          .catch(() => alert("Error al conectar con el servidor"));
+        }
+      },
+
+      paginaAnterior: function() {
+        if(vm.paginaActual > 1) {
+          vm.fetchCitas(vm.paginaActual - 1);
+        }
+      },
+
+      paginaSiguiente: function() {
+        if(vm.paginaActual < vm.totalPaginas) {
+          vm.fetchCitas(vm.paginaActual + 1);
+        }
+      }
+    });
+
+    // Inicialización
+    vm.fetchPacientes();
+    vm.fetchMedicos();
+    vm.fetchCitas(1);
+  </script>
+</body>
+</html>
